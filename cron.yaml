@@ -1,0 +1,63 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jp-runner
+rules:
+  - apiGroups:
+      - extensions
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - 'get'
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: jp-runner
+subjects:
+  - kind: ServiceAccount
+    name: sa-jp-runner
+roleRef:
+  kind: Role
+  name: jp-runner
+  apiGroup: ""
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-jp-runner
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: available-pods-check
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 0
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sa-jp-runner
+          containers:
+            - name: available-pods-check
+              image: bitnami/kubectl:latest
+              env:
+              - name: CHANNEL
+                value: "#your-monitoring-channel"
+              - name: WEBHOOK
+                value: "https://hooks.slack.com/services/..."
+              command: ["/scripts/available-pods-check.sh"]
+              volumeMounts:
+                - name: available-pods-check
+                  mountPath: /scripts
+          volumes:
+            - name: available-pods-check
+              configMap:
+                name: available-pods-check
+                defaultMode: 0777
+          restartPolicy: OnFailure

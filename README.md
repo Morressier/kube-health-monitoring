@@ -1,6 +1,6 @@
 # kube-health-monitoring
 This is simple solution to monitor the health of your deplyoments in kuberenetes. It includes a cron job which will run 
-every X minutes and check weather any of your deployments doesn't have running pots. If so it will send an alert message to slack.
+every X minutes and check weather any of your deployments doesn't have running pods. If so it will send an alert message to slack.
 
 ### Deployment
 
